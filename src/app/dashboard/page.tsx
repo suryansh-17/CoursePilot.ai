@@ -1,12 +1,12 @@
-import { UserButton } from "@clerk/nextjs";
+import AddCourse from "@/components/AddCourse/AddCourse";
 import React from "react";
 
-function Dashboard() {
+const Dashboard: React.FC = () => {
   return (
     <div>
-      <UserButton />
+      <AddCourse />
     </div>
   );
-}
+};
 
 export default Dashboard;
