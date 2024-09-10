@@ -2,6 +2,7 @@
 import { useUser } from "@clerk/nextjs";
 import React from "react";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 const AddCourse: React.FC = () => {
   const { user } = useUser();
@@ -14,7 +15,9 @@ const AddCourse: React.FC = () => {
         </h2>
         <p className="text-sm">Create new course with AI</p>
       </div>
-      <Button>+ Create New Course</Button>
+      <Link href={"/create-course"}>
+        <Button>+ Create New Course</Button>
+      </Link>
     </div>
   );
 };

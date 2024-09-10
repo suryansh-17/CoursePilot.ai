@@ -1,4 +1,4 @@
-import AddCourse from "@/components/AddCourse/AddCourse";
+import AddCourse from "@/components/CreateCourse/AddCourse";
 import React from "react";
 
 const Dashboard: React.FC = () => {
