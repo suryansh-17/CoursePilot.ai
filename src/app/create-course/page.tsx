@@ -8,8 +8,17 @@ import SelectCategory from "@/components/CreateCourse/SelectCategory";
 import TopicDescription from "@/components/CreateCourse/TopicDescription";
 import SelectOption from "@/components/CreateCourse/SelectOption";
 import { useAppSelector } from "@/lib/store/hooks";
+import { generateCourseLayoutAI } from "@/config/AiModel";
+import LoadingModal from "@/components/LoadingModal";
+import uuid4 from "uuid4";
+import { User } from "@clerk/nextjs/server";
+import { useUser } from "@clerk/nextjs";
+import { cp } from "fs";
+import { useRouter } from "next/navigation";
 
 const Page: React.FC = () => {
+  const user = useUser().user;
+  const router = useRouter();
   const StepperOptions = [
     {
       id: 1,
@@ -27,7 +36,7 @@ const Page: React.FC = () => {
       icon: <IoMdOptions />,
     },
   ];
-
+  const [isGenerating, setIsGenerating] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const userCourseInput = useAppSelector((state) => state.userCourseInput);
   const { category, topic, description, options } = userCourseInput;
@@ -55,6 +64,51 @@ const Page: React.FC = () => {
 
   const isGenerateButtonDisabled = () => !isOptionsValid();
 
+  const generateCourseLayout = async () => {
+    setIsGenerating(true);
+    const BASIC_PROMPT =
+      "Generate A Course Tutorial on Following Detail With field Course Name, Description, Along with Chapter Name, about, Duration";
+    const USER_INPUT_PROMPT = `Category: ${category}, Topic: ${topic}, Level: ${options.difficultyLevel}, Duration: ${options.courseDuration}, No. Of Chapters: ${options.noOfChapters}, in JSON format`;
+    const FINAL_PROMPT = `${BASIC_PROMPT}\n${USER_INPUT_PROMPT}`;
+
+    try {
+      const result = await generateCourseLayoutAI.sendMessage(FINAL_PROMPT);
+      const responseText = result.response.text();
+      const parsedData = JSON.parse(responseText);
+      const courseId = uuid4();
+      const courseData = {
+        courseId,
+        name: topic,
+        category,
+        level: options.difficultyLevel,
+        courseOutput: parsedData,
+        createdBy: user?.primaryEmailAddress?.emailAddress,
+        userId: user?.id,
+        userName: user?.fullName,
+        userProfileImage: user?.imageUrl,
+      };
+
+      const response = await fetch("/api/courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(courseData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add course");
+      }
+
+      const newCourse = await response.json();
+      console.log("Course added:", newCourse);
+      router.replace(`/create-course/${courseId}`);
+    } catch (error) {
+      console.error("Error generating or saving course layout:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   return (
     <div>
       {/* Stepper */}
@@ -106,12 +160,16 @@ const Page: React.FC = () => {
               Next
             </Button>
           ) : (
-            <Button disabled={isGenerateButtonDisabled()}>
+            <Button
+              disabled={isGenerateButtonDisabled()}
+              onClick={generateCourseLayout}
+            >
               Generate Course Layout
             </Button>
           )}
         </div>
       </div>
+      <LoadingModal loading={isGenerating} />
     </div>
   );
 };

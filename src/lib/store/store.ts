@@ -1,10 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userCourseInput from "./features/userCourseInputSlice";
-
+import courseLayout from "./features/courseLayoutSlice";
 export const makeStore = () => {
   return configureStore({
     reducer: {
       userCourseInput: userCourseInput,
+      courseLayout: courseLayout,
     },
   });
 };
