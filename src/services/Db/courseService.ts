@@ -1,5 +1,5 @@
 import { db } from "@/config/Database";
-import { CourseList } from "@/models/Schema";
+import { Chapters, CourseList } from "@/models/Schema";
 import { eq, and } from "drizzle-orm";
 
 export async function addCourse(courseData: {
@@ -54,5 +54,22 @@ export async function updateCourse(courseId: string, courseData: any) {
   } catch (error) {
     console.error("Failed to update course:", error);
     throw new Error("Failed to update course in the database");
+  }
+}
+
+export async function addChapter(chapterData: {
+  courseId: string;
+  chapterId: string;
+  content: any;
+  videoId: string;
+}) {
+  try {
+    console.log(chapterData);
+    const result = await db.insert(Chapters).values(chapterData);
+    console.log(result);
+    return result;
+  } catch (error) {
+    console.error("Failed to insert chapter:", error);
+    throw new Error("Failed to add chapter to the database");
   }
 }
